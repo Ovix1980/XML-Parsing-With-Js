@@ -1,0 +1,136 @@
+<html>
+<head>
+<style>
+.image-artikel{
+		width: 40%;
+		height: auto;
+		float: left;
+		margin-right: 2%
+	}
+.image-artikel img{
+		width: 100%;
+	}
+.title-artikel, .kategori-artikel{
+		width: 58%;
+		float: left;
+		font-family: 'Raleway', sans-serif;
+		font-size: 12px;
+    	line-height: 1.6em;
+    	text-align: left;
+	}
+</style>
+<script>
+function showRSS(str) {
+  if (str.length==0) { 
+    document.getElementById("rssOutput").innerHTML="";
+    return;
+  }
+  if (window.XMLHttpRequest) {
+    // code for IE7+, Firefox, Chrome, Opera, Safari
+    xmlhttp=new XMLHttpRequest();
+  } else {  // code for IE6, IE5
+    xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+  }
+  xmlhttp.onreadystatechange=function() {
+    if (this.readyState==4 && this.status==200) {
+      document.getElementById("rssOutput").innerHTML=this.responseText;
+    }
+  }
+  xmlhttp.open("GET","getrss.php?q="+str,true);
+  xmlhttp.send();
+}
+</script>
+</head>
+<body>
+
+<form>
+<select onchange="showRSS(this.value)">
+<option value="">Choose Category</option>
+<option value="beauty">Beauty</option>
+<option value="fashion">Fashion</option>
+<option value="lifestyle">Lifestyle</option>
+</select>
+</form>
+<br>
+<div id="rssOutput">RSS-feed will be listed here...</div>
+</body>
+</html>
+
+
+<?php
+//get the q parameter from URL
+$q=$_GET["q"];
+
+//find out which feed was selected
+switch ($q) {
+    case "beauty":
+        $xml=("https://feed.fimela.com/rss?categories[]=967");
+        break;
+	case "fashion":
+        $xml=("https://feed.fimela.com/rss?categories[]=842");
+        break;
+	case "lifestyle":
+        $xml=("https://feed.fimela.com/rss?categories[]=908");
+        break;
+	default :
+	//echo "You Ain't Choose!";	
+	
+}
+
+
+/*if($q=="beauty") {
+  $xml=("https://feed.fimela.com/rss?categories[]=967");
+} elseif($q=="ZDN") {
+  $xml=("https://www.zdnet.com/news/rss.xml");
+}
+*/
+
+$xmlDoc = new DOMDocument();
+$xmlDoc->load($xml);
+
+
+
+
+//get and output "<item>" elements
+$xmlResult=$xmlDoc->getElementsByTagName('item');
+
+for ($i=0; $i<=2; $i++) {
+$htmlDoc = new DOMDocument();
+$item_title=$xmlResult->item($i)->getElementsByTagName('title')->item(0)->childNodes->item(0)->nodeValue;
+$item_link=$xmlResult->item($i)->getElementsByTagName('link')->item(0)->childNodes->item(0)->nodeValue;
+$item_desc=$xmlResult->item($i)->getElementsByTagName('description')->item(0)->childNodes->item(0)->nodeValue;
+
+//Hide This Process
+$htmlDoc->loadHTML($item_desc);
+$xpath = new DOMXPath($htmlDoc);
+$src = $xpath->evaluate("string(//img/@src)");
+$img_src[] = $src;
+//
+//echo($item_desc);
+
+//echo("<p>" . $item_title . "</p>");
+//echo ("<p>". $item_title);
+echo("<a href='".$item_link."' target='blank'>");
+echo("<div style='width:auto;height:70px;background: #f3f3f3;'>");
+	echo("<div class='image-artikel'>");
+	if($img_src[$i]=null){
+	echo("<img src='" . $img_src[$i] . "' width=100% height=70>");
+	}else{
+	//error_reporting(0);
+	echo("<img src='https://cdn1-production-assets-kly.akamaized.net/logos/841/original/070765800_1541579020-rectangle_2x.png' width=100% height=70>");	
+	}
+	echo("</div>");
+	
+	echo("<div class='title-artikel'>");
+	echo($item_title);
+	echo("<br>");
+	echo("</div>");	
+echo("</div>");	
+echo("</a>");
+if($i<2){
+echo("<div style='margin:10px 0;width:300px;height:1px;background: #a0a0a0;;'></div>");
+}
+
+}
+
+?>
